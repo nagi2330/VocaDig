@@ -10,3 +10,11 @@ max_pages = 10
 rate_limit_seconds = 1.0
 max_retries = 3
 timeout_seconds = 20
+
+[crawler.bilibili]
+# The favourite folder's media_id. Keep the authenticated Cookie outside this file,
+# for example in the BILIBILI_COOKIE environment variable.
+media_id = 0
+page_size = 20
+max_pages = 100
+rate_limit_seconds = 1.0

@@ -69,7 +69,7 @@ class NiconicoCrawler:
                 continue
             song_id = str(song_data["song_id"])
             exists = repository.get_song(song_id) is not None
-            repository.upsert_song(song_data)
+            repository.upsert_platform_song("niconico", song_id, song_data)
             if not exists:
                 inserted += 1
         LOGGER.info("Niconico crawl completed: %d new songs", inserted)

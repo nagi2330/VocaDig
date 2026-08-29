@@ -36,28 +36,28 @@ Do not begin with mobile UI or a complex neural recommender.
 
 Set up:
 
-- Python environment
-- dependency management
-- SQLAlchemy
-- pytest
-- logging
-- configuration
+- [x] Python environment
+- [x] dependency management
+- [x] SQLAlchemy
+- [x] pytest
+- [x] logging
+- [x] configuration
 
 Create:
 
 ```text
-backend/
-tests/
-data/
-config/
-scripts/
+[x] backend/
+[x] tests/
+[x] data/
+[x] config/
+[x] scripts/
 ```
 
 Acceptance:
 
 ```text
-application starts
-tests execute
+[x] application starts
+[x] tests execute
 ```
 
 ---
@@ -66,26 +66,26 @@ tests execute
 
 Implement:
 
-- Song model
-- UserFavorite
-- UserFeedback
-- UserProfile
-- repository layer
-- CRUD operations
+- [x] Song model
+- [x] UserFavorite
+- [x] UserFeedback
+- [x] UserProfile
+- [x] repository layer
+- [x] CRUD operations
 
 Support:
 
 ```text
-add
-remove
-favorite
-rate
-search
+[x] add
+[x] remove
+[x] favorite
+[x] rate
+[x] search
 ```
 
 Acceptance:
 
-A local database can maintain a substantial personal Vocaloid library.
+[x] A local database can maintain a substantial personal Vocaloid library.
 
 ---
 
@@ -94,21 +94,21 @@ A local database can maintain a substantial personal Vocaloid library.
 Implement:
 
 ```text
-crawler/niconico.py
-crawler/parser.py
+[x] crawler/niconico.py
+[x] crawler/parser.py
 ```
 
 Requirements:
 
-- incremental crawling
-- duplicate detection
-- retries
-- rate limiting
-- logging
+- [x] incremental crawling
+- [x] duplicate detection
+- [x] retries
+- [x] rate limiting
+- [x] logging
 
 Acceptance:
 
-New Niconico candidates can be inserted into the local database automatically.
+[x] New Niconico candidates can be inserted into the local database automatically.
 
 ---
 
@@ -459,18 +459,18 @@ Important tests:
 ## Crawler
 
 ```text
-duplicate posts
-malformed metadata
-network failures
-pagination
+[x] duplicate posts
+[x] malformed metadata
+- [ ] network failures (retry behavior is implemented, but lacks an automated test)
+- [ ] pagination (offset pagination is implemented, but lacks an automated test)
 ```
 
 ## Database
 
 ```text
-CRUD
-unique song IDs
-duplicate prevention
+[x] CRUD
+[x] unique song IDs
+[x] duplicate prevention
 ```
 
 ## Dig Engine

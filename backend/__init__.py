@@ -1,0 +1,1 @@
+"""VocaDig backend package."""

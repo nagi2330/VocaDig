@@ -1,0 +1,1 @@
+"""External catalog acquisition."""

@@ -1,0 +1,12 @@
+[database]
+url = "sqlite:///data/vocadig.db"
+
+[crawler.niconico]
+# Supply a Niconico search/feed endpoint that returns JSON data.
+endpoint = ""
+query = "VOCALOID"
+page_size = 100
+max_pages = 10
+rate_limit_seconds = 1.0
+max_retries = 3
+timeout_seconds = 20

@@ -8,10 +8,15 @@ from typing import Any
 
 import requests
 
+from backend.crawler.cookies import load_cookie_header
 from backend.database.repository import LibraryRepository
 
 LOGGER = logging.getLogger(__name__)
 FAVORITES_ENDPOINT = "https://api.bilibili.com/x/v3/fav/resource/list"
+
+
+class BilibiliFavoritesError(RuntimeError):
+    """A successful HTTP response whose Bilibili API payload is an error."""
 
 
 @dataclass(frozen=True)
@@ -47,9 +52,14 @@ class BilibiliFavoritesCrawler:
 
     def __init__(self, config: BilibiliFavoritesConfig, http: requests.Session | None = None) -> None:
         self.config, self.http = config, http or requests.Session()
-        self.http.headers.update({"User-Agent": config.user_agent})
+        self.collection_name: str | None = None
+        self.http.headers.update({
+            "User-Agent": config.user_agent,
+            "Referer": "https://www.bilibili.com/",
+            "Accept": "application/json, text/plain, */*",
+        })
         if config.cookie:
-            self.http.headers.update({"Cookie": config.cookie})
+            self.http.headers.update({"Cookie": load_cookie_header(config.cookie, ".bilibili.com")})
 
     def crawl(self, repository: LibraryRepository, user_id: str) -> int:
         imported = 0
@@ -77,7 +87,20 @@ class BilibiliFavoritesCrawler:
             payload = response.json()
             data = payload.get("data") if isinstance(payload, dict) else None
             if not isinstance(data, dict):
-                raise ValueError("Bilibili favorites response has no data object")
+                if isinstance(payload, dict):
+                    code = payload.get("code", "unknown")
+                    message = payload.get("message") or payload.get("msg") or "unknown error"
+                    raise BilibiliFavoritesError(
+                        f"Bilibili favourite folder {self.config.media_id} could not be read "
+                        f"(code {code}: {message}). Check that media_id is correct and the folder is public; "
+                        "for private folders, configure a Cookie environment variable."
+                    )
+                raise BilibiliFavoritesError(
+                    f"Bilibili favourite folder {self.config.media_id} returned a non-JSON API payload"
+                )
+            info = data.get("info")
+            if isinstance(info, dict) and isinstance(info.get("title"), str):
+                self.collection_name = info["title"]
             items = data.get("medias")
             if not isinstance(items, list):
                 return

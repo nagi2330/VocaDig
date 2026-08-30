@@ -9,6 +9,7 @@ from typing import Any
 
 import requests
 
+from backend.crawler.cookies import load_cookie_header
 from backend.crawler.parser import parse_niconico_item
 
 MYLIST_ENDPOINT = "https://nvapi.nicovideo.jp/v2/mylists/{mylist_id}"
@@ -29,13 +30,14 @@ class NiconicoMylistConfig:
 class NiconicoMylistCrawler:
     def __init__(self, config: NiconicoMylistConfig, http: requests.Session | None = None) -> None:
         self.config, self.http = config, http or requests.Session()
+        self.collection_name: str | None = None
         self.http.headers.update({
             "User-Agent": config.user_agent,
             "X-Frontend-Id": "6",
             "X-Frontend-Version": "0",
         })
         if config.cookie:
-            self.http.headers.update({"Cookie": config.cookie})
+            self.http.headers.update({"Cookie": load_cookie_header(config.cookie, ".nicovideo.jp")})
 
     def iter_songs(self) -> Iterator[dict[str, object]]:
         for page in range(1, self.config.max_pages + 1):
@@ -49,6 +51,8 @@ class NiconicoMylistCrawler:
             data = payload.get("data") if isinstance(payload, dict) else None
             mylist = data.get("mylist") if isinstance(data, dict) else None
             items = mylist.get("items") if isinstance(mylist, dict) else None
+            if isinstance(mylist, dict) and isinstance(mylist.get("name"), str):
+                self.collection_name = mylist["name"]
             if not isinstance(items, list):
                 return
             for item in items:

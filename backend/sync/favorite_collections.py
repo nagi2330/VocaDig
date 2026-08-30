@@ -31,7 +31,10 @@ class FavoriteCollectionSyncService:
     def sync_collection(self, collection: DefaultFavoriteCollection) -> CollectionSyncReport:
         if collection.platform == "bilibili":
             self.repository.bootstrap_legacy_niconico_videos()
-        songs = list(self._fetch_songs(collection))
+        crawler = self._crawler_for(collection)
+        songs = list(crawler.iter_songs())
+        if collection.name is None and crawler.collection_name:
+            collection = self.repository.set_default_collection_name(collection.id, crawler.collection_name)
         song_ids: set[str] = set()
         for song in songs:
             song_id = str(song["song_id"])
@@ -44,15 +47,14 @@ class FavoriteCollectionSyncService:
         difference = self.repository.apply_collection_snapshot(collection.id, song_ids)
         return CollectionSyncReport(collection.id, collection.platform, difference)
 
-    def _fetch_songs(self, collection: DefaultFavoriteCollection):
+    def _crawler_for(self, collection: DefaultFavoriteCollection):
         cookie = self._cookie_for(collection)
         if collection.platform == "bilibili":
             crawler = BilibiliFavoritesCrawler(
                 BilibiliFavoritesConfig(media_id=int(collection.remote_id), cookie=cookie)
             )
-            return crawler.iter_songs()
-        crawler = NiconicoMylistCrawler(NiconicoMylistConfig(mylist_id=collection.remote_id, cookie=cookie))
-        return crawler.iter_songs()
+            return crawler
+        return NiconicoMylistCrawler(NiconicoMylistConfig(mylist_id=collection.remote_id, cookie=cookie))
 
     @staticmethod
     def _cookie_for(collection: DefaultFavoriteCollection) -> str | None:

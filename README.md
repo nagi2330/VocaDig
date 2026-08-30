@@ -142,11 +142,21 @@ python scripts/manage_default_collections.py add --user-id nagi --platform bilib
 python scripts/manage_default_collections.py add --user-id nagi --platform niconico --remote-id 987654 --name "Nico 收藏" --credential-env NICONICO_COOKIE --interval-minutes 360
 ```
 
+`--name` 是可选项；省略时，首次成功同步会自动采用平台上的收藏夹名称。显式指定名称后，后续同步不会覆盖它。
+
 查看已启用的收藏夹：
 
 ```powershell
 python scripts/manage_default_collections.py list --user-id nagi
 ```
+
+停止监控并删除一个收藏夹配置（先用 `list` 查看编号）：
+
+```powershell
+python scripts/manage_default_collections.py remove --user-id nagi --collection-id 1
+```
+
+该操作会删除收藏夹配置和它的成员快照，并删除只属于该收藏夹的歌曲及其收藏、反馈和平台关联；仍在其他已监控收藏夹中的歌曲会保留。
 
 执行一次到期检查；只有距离上次成功同步超过该收藏夹的 `--interval-minutes` 时才会访问平台：
 
@@ -154,6 +164,13 @@ python scripts/manage_default_collections.py list --user-id nagi
 $env:BILIBILI_COOKIE = "浏览器请求中的完整 Cookie 内容"
 $env:NICONICO_COOKIE = "浏览器请求中的完整 Cookie 内容"
 python scripts/sync_default_collections.py --user-id nagi
+```
+
+也可以把浏览器扩展导出的 Cookie JSON 文件路径直接设为环境变量。同步程序会只选择目标站点域名下的全部 Cookie，并将它们作为请求头发送：
+
+```powershell
+$env:BILIBILI_COOKIE = "C:\path\to\bilibili-cookies.json"
+python scripts/sync_default_collections.py --user-id nagi --force
 ```
 
 `--force` 可忽略间隔立即同步。该脚本适合作为 Windows 任务计划程序、cron 或其他调度器的定时任务入口。

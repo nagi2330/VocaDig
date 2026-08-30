@@ -23,6 +23,9 @@ def main() -> None:
     add.add_argument("--interval-minutes", type=int, default=360)
     listing = commands.add_parser("list", help="List enabled default collections")
     listing.add_argument("--user-id", required=True)
+    remove = commands.add_parser("remove", help="Remove a collection and songs not in another monitored collection")
+    remove.add_argument("--user-id", required=True)
+    remove.add_argument("--collection-id", type=int, required=True)
     arguments = parser.parse_args()
     sessions = create_session_factory(arguments.database_url)
     create_database(sessions.kw["bind"])
@@ -35,6 +38,11 @@ def main() -> None:
                 sync_interval_minutes=arguments.interval_minutes,
             )
             print(f"Saved collection #{collection.id}: {collection.platform}:{collection.remote_id}")
+            return
+        if arguments.command == "remove":
+            if not repository.remove_default_collection(arguments.user_id, arguments.collection_id):
+                parser.error(f"No collection #{arguments.collection_id} belongs to user {arguments.user_id}")
+            print(f"Removed collection #{arguments.collection_id} and songs not found in another monitored collection.")
             return
         for collection in repository.list_default_collections(arguments.user_id):
             print(f"#{collection.id} {collection.platform}:{collection.remote_id} "

@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, delete, select
 from sqlalchemy.orm import Session
 
 from backend.database.models import (
@@ -147,6 +147,63 @@ class LibraryRepository:
             collection for collection in collections if is_due(collection)
         ]
 
+    def remove_default_collection(self, user_id: str, collection_id: int) -> bool:
+        """Remove a collection and songs that no other monitored collection contains."""
+        collection = self.session.scalar(
+            select(DefaultFavoriteCollection).where(
+                DefaultFavoriteCollection.id == collection_id,
+                DefaultFavoriteCollection.user_id == user_id,
+            )
+        )
+        if collection is None:
+            return False
+        collection_entries = list(self.session.scalars(
+            select(FavoriteCollectionEntry).where(FavoriteCollectionEntry.collection_id == collection_id)
+        ))
+        candidate_song_ids = {entry.song_id for entry in collection_entries}
+        deletable_song_ids = {
+            song_id
+            for song_id in candidate_song_ids
+            if not self.session.scalar(
+                select(FavoriteCollectionEntry.id).where(
+                    FavoriteCollectionEntry.song_id == song_id,
+                    FavoriteCollectionEntry.collection_id != collection_id,
+                    FavoriteCollectionEntry.present.is_(True),
+                )
+            )
+        }
+        for entry in collection_entries:
+            self.session.delete(entry)
+        self.session.delete(collection)
+        self.session.flush()
+
+        for song_id in deletable_song_ids:
+            videos = list(self.session.scalars(
+                select(PlatformVideo).where(PlatformVideo.song_id == song_id)
+            ))
+            video_ids = [video.id for video in videos]
+            canonical_ids = {video.canonical_song_id for video in videos if video.canonical_song_id is not None}
+            if video_ids:
+                self.session.execute(
+                    delete(VideoMatchSuggestion).where(
+                        VideoMatchSuggestion.left_video_id.in_(video_ids)
+                        | VideoMatchSuggestion.right_video_id.in_(video_ids)
+                    )
+                )
+            self.session.execute(delete(FavoriteCollectionEntry).where(FavoriteCollectionEntry.song_id == song_id))
+            self.session.execute(delete(UserFavorite).where(UserFavorite.song_id == song_id))
+            self.session.execute(delete(UserFeedback).where(UserFeedback.song_id == song_id))
+            self.session.execute(delete(PlatformVideo).where(PlatformVideo.song_id == song_id))
+            self.session.execute(delete(Song).where(Song.song_id == song_id))
+            for canonical_id in canonical_ids:
+                has_uploads = self.session.scalar(
+                    select(PlatformVideo.id).where(PlatformVideo.canonical_song_id == canonical_id)
+                )
+                if has_uploads is None:
+                    self.session.execute(delete(CanonicalSong).where(CanonicalSong.id == canonical_id))
+        self.session.commit()
+        return True
+
     def apply_collection_snapshot(
         self, collection_id: int, song_ids: set[str]
     ) -> CollectionDifference:
@@ -182,6 +239,14 @@ class LibraryRepository:
         collection.last_synced_at = now
         self.session.commit()
         return CollectionDifference(tuple(sorted(added)), tuple(sorted(removed)), unchanged)
+
+    def set_default_collection_name(self, collection_id: int, name: str) -> DefaultFavoriteCollection:
+        collection = self.session.get(DefaultFavoriteCollection, collection_id)
+        if collection is None:
+            raise ValueError(f"Unknown default collection {collection_id}")
+        collection.name = name
+        self.session.commit()
+        return collection
 
     def list_match_suggestions(self, status: str = "pending") -> list[VideoMatchSuggestion]:
         return list(

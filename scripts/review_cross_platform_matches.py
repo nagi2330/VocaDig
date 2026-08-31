@@ -9,19 +9,22 @@ if str(PROJECT_ROOT) not in sys.path:
 from backend.database.database import create_database, create_session_factory
 from backend.database.models import PlatformVideo
 from backend.database.repository import LibraryRepository
+from backend.settings import DEFAULT_CONFIG_PATH, load_settings
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="List and review cross-platform video match proposals.")
-    parser.add_argument("--database-url", default="sqlite:///data/vocadig.db")
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
+    parser.add_argument("--database-url", default=argparse.SUPPRESS)
     parser.add_argument("--suggestion-id", type=int)
     choice = parser.add_mutually_exclusive_group()
     choice.add_argument("--confirm", action="store_true")
     choice.add_argument("--reject", action="store_true")
     arguments = parser.parse_args()
+    settings = load_settings(arguments.config)
     if (arguments.confirm or arguments.reject) and arguments.suggestion_id is None:
         parser.error("--suggestion-id is required with --confirm or --reject")
-    sessions = create_session_factory(arguments.database_url)
+    sessions = create_session_factory(getattr(arguments, "database_url", settings.database.url))
     create_database(sessions.kw["bind"])
     with sessions() as session:
         repository = LibraryRepository(session)

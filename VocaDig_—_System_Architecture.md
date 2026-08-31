@@ -50,6 +50,11 @@ voca-dig/
 │   │
 │   ├── sync/
 │   │   └── favorite_collections.py
+│   ├── recommendation/
+│   │   ├── profile.py
+│   │   ├── similarity.py
+│   │   ├── scorer.py
+│   │   └── ranking.py
 │   ├── matching.py
 │   └── main.py
 │
@@ -61,7 +66,7 @@ voca-dig/
 └── README.md
 ```
 
-以下目录仍处于规划阶段，只有在具备可运行的垂直功能切片时才应添加：`features/`、`recommendation/`、`api/` 和 `scheduler/`。`scripts/` 包含当前的运维入口；`main.py` 仅初始化数据库，并非 API 服务器。
+以下目录仍处于规划阶段，只有在具备可运行的垂直功能切片时才应添加：`features/`、`api/` 和 `scheduler/`。`recommendation/` 已实现基于元数据的基础推荐切片。`scripts/` 包含当前的运维入口；`main.py` 仅初始化数据库，并非 API 服务器。
 
 ---
 

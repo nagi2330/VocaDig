@@ -405,6 +405,29 @@ class LibraryRepository:
             )
         )
 
+    def list_favorite_songs(self, user_id: str) -> list[Song]:
+        return list(
+            self.session.scalars(
+                select(Song)
+                .join(UserFavorite, UserFavorite.song_id == Song.song_id)
+                .where(UserFavorite.user_id == user_id)
+                .order_by(UserFavorite.created_at, Song.song_id)
+            )
+        )
+
+    def list_candidate_songs(self, user_id: str, limit: int | None = None) -> list[Song]:
+        favorite_song_ids = select(UserFavorite.song_id).where(
+            UserFavorite.user_id == user_id
+        )
+        statement: Select[tuple[Song]] = (
+            select(Song)
+            .where(Song.song_id.not_in(favorite_song_ids))
+            .order_by(Song.upload_time.desc(), Song.title, Song.song_id)
+        )
+        if limit is not None:
+            statement = statement.limit(limit)
+        return list(self.session.scalars(statement))
+
     def record_feedback(self, user_id: str, song_id: str, action: str) -> UserFeedback:
         feedback = UserFeedback(user_id=user_id, song_id=song_id, action=action)
         self.session.add(feedback)

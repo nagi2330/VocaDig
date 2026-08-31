@@ -9,6 +9,7 @@ from backend.crawler.bilibili import BilibiliFavoritesConfig, BilibiliFavoritesC
 from backend.crawler.niconico_favorites import NiconicoMylistConfig, NiconicoMylistCrawler
 from backend.database.models import DefaultFavoriteCollection
 from backend.database.repository import CollectionDifference, LibraryRepository
+from backend.settings import BilibiliSettings, NiconicoMylistSettings, Settings
 
 
 @dataclass(frozen=True)
@@ -21,8 +22,11 @@ class CollectionSyncReport:
 class FavoriteCollectionSyncService:
     """Runs due collection synchronizations; schedule this class externally as desired."""
 
-    def __init__(self, repository: LibraryRepository) -> None:
+    def __init__(self, repository: LibraryRepository, settings: Settings | None = None) -> None:
         self.repository = repository
+        settings = settings or Settings()
+        self.bilibili_settings: BilibiliSettings = settings.bilibili
+        self.niconico_mylist_settings: NiconicoMylistSettings = settings.niconico_mylist
 
     def sync_due(self, user_id: str, force: bool = False) -> list[CollectionSyncReport]:
         collections = self.repository.list_default_collections(user_id, due_only=not force)
@@ -51,10 +55,20 @@ class FavoriteCollectionSyncService:
         cookie = self._cookie_for(collection)
         if collection.platform == "bilibili":
             crawler = BilibiliFavoritesCrawler(
-                BilibiliFavoritesConfig(media_id=int(collection.remote_id), cookie=cookie)
+                BilibiliFavoritesConfig(
+                    media_id=int(collection.remote_id),
+                    cookie=cookie,
+                    **vars(self.bilibili_settings),
+                )
             )
             return crawler
-        return NiconicoMylistCrawler(NiconicoMylistConfig(mylist_id=collection.remote_id, cookie=cookie))
+        return NiconicoMylistCrawler(
+            NiconicoMylistConfig(
+                mylist_id=collection.remote_id,
+                cookie=cookie,
+                **vars(self.niconico_mylist_settings),
+            )
+        )
 
     @staticmethod
     def _cookie_for(collection: DefaultFavoriteCollection) -> str | None:

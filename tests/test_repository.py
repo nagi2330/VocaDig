@@ -18,3 +18,13 @@ def test_library_crud_and_profile(session):
     repository.record_feedback("user-1", "sm1", "like")
     repository.set_profile("user-1", {"weights": {"metadata": 1.0}})
     assert repository.get_profile("user-1") == {"weights": {"metadata": 1.0}}
+
+
+def test_recommendation_queries_return_favorites_and_unfavorited_candidates(session):
+    repository = LibraryRepository(session)
+    repository.upsert_song({"song_id": "sm1", "title": "Favorite"})
+    repository.upsert_song({"song_id": "sm2", "title": "Candidate"})
+    repository.add_favorite("user-1", "sm1")
+
+    assert [song.song_id for song in repository.list_favorite_songs("user-1")] == ["sm1"]
+    assert [song.song_id for song in repository.list_candidate_songs("user-1")] == ["sm2"]

@@ -129,15 +129,15 @@ novelty
 实现：
 
 ```text
-recommendation/profile.py
-recommendation/similarity.py
-recommendation/scorer.py
-recommendation/ranking.py
+[x] recommendation/profile.py
+[x] recommendation/similarity.py
+[x] recommendation/scorer.py
+[x] recommendation/ranking.py
 ```
 
 验收标准：
 
-给定个人曲库和新候选项，VocaDig 能生成有意义的排序列表。
+[x] 给定个人曲库和新候选项，VocaDig 能生成有意义的排序列表。
 
 ---
 

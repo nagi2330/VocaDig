@@ -29,7 +29,9 @@ python -m pip install -e ".[dev]"
 python -m backend.main
 ```
 
-可复制 `config/settings.example.toml` 作为本地配置参考。当前命令行脚本的参数优先于该示例配置。
+将 `config/settings.example.toml` 复制为 `config/settings.toml`，即可为本地运行提供配置。所有脚本默认读取该文件，也可以通过 `--config <路径>` 指定其他配置文件。配置文件缺失时使用代码默认值；显式传入的命令行参数优先于 TOML 配置。
+
+配置文件可设置数据库 URL、Niconico 搜索、Bilibili 收藏夹、Niconico mylist 的请求参数，以及默认收藏夹同步间隔。`media_id`、mylist ID、用户 ID 和 Cookie 均属于一次操作或敏感凭据，不写入该文件；Cookie 仍只通过环境变量或本地 Cookie 文件路径提供。
 
 ## 模块与职责
 
@@ -65,6 +67,7 @@ python scripts/crawl_niconico.py --query VOCALOID --max-pages 10
 
 ```text
 --database-url sqlite:///data/vocadig.db  指定本地数据库
+--config <路径>                            指定 TOML 配置文件
 --query <关键词>                           搜索词
 --max-pages <数量>                         最多抓取页数
 --proxy <代理地址>                         HTTP(S) 代理
@@ -72,6 +75,16 @@ python scripts/crawl_niconico.py --query VOCALOID --max-pages 10
 ```
 
 重复执行会更新已有视频的元数据，只把此前不存在的视频计入新增数。
+
+## 生成基础推荐
+
+当前已提供不依赖 embedding 的基础推荐：它根据已收藏歌曲的作者、歌姬和标签建立品味画像，对未收藏候选项计算匹配度与新颖度，并输出总分和各分项。至少导入一些曲目并添加一首本地收藏后运行：
+
+```powershell
+python scripts/recommend_songs.py --user-id nagi --limit 20
+```
+
+`--config` 和 `--database-url` 的优先级与导入脚本一致。该阶段不写入推荐历史，也不会替代后续的音频、文本或 Daily Dig 推荐。
 
 ## 同步 Bilibili 收藏夹
 
@@ -92,6 +105,7 @@ python scripts/sync_bilibili_favorites.py --media-id 123456 --user-id nagi
 
 ```text
 --database-url <URL>       指定数据库
+--config <路径>            指定 TOML 配置文件
 --cookie-env <变量名>      默认 BILIBILI_COOKIE
 --max-pages <数量>         最多读取的收藏夹页数
 ```

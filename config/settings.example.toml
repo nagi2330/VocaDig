@@ -2,19 +2,31 @@
 url = "sqlite:///data/vocadig.db"
 
 [crawler.niconico]
-# Supply a Niconico search/feed endpoint that returns JSON data.
-endpoint = ""
+endpoint = "https://snapshot.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
 query = "VOCALOID"
 page_size = 100
 max_pages = 10
 rate_limit_seconds = 1.0
 max_retries = 3
 timeout_seconds = 20
+user_agent = "VocaDig/0.1 (personal music discovery)"
+proxy_url = ""
 
 [crawler.bilibili]
-# The favourite folder's media_id. Keep the authenticated Cookie outside this file,
-# for example in the BILIBILI_COOKIE environment variable.
-media_id = 0
+endpoint = "https://api.bilibili.com/x/v3/fav/resource/list"
 page_size = 20
 max_pages = 100
 rate_limit_seconds = 1.0
+timeout_seconds = 20
+user_agent = "VocaDig/0.1 (personal music discovery)"
+
+[crawler.niconico_mylist]
+endpoint_template = "https://nvapi.nicovideo.jp/v2/mylists/{mylist_id}"
+page_size = 100
+max_pages = 100
+rate_limit_seconds = 1.0
+timeout_seconds = 20
+user_agent = "VocaDig/0.1 (personal music discovery)"
+
+[collections]
+sync_interval_minutes = 360

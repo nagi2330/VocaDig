@@ -9,20 +9,23 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from backend.database.database import create_database, create_session_factory
 from backend.database.repository import LibraryRepository
+from backend.settings import DEFAULT_CONFIG_PATH, load_settings
 from backend.sync.favorite_collections import FavoriteCollectionSyncService
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Synchronize due default favourite collections.")
     parser.add_argument("--user-id", required=True)
-    parser.add_argument("--database-url", default="sqlite:///data/vocadig.db")
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
+    parser.add_argument("--database-url", default=argparse.SUPPRESS)
     parser.add_argument("--force", action="store_true", help="Sync even if the configured interval has not elapsed")
     arguments = parser.parse_args()
+    settings = load_settings(arguments.config)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    sessions = create_session_factory(arguments.database_url)
+    sessions = create_session_factory(getattr(arguments, "database_url", settings.database.url))
     create_database(sessions.kw["bind"])
     with sessions() as session:
-        reports = FavoriteCollectionSyncService(LibraryRepository(session)).sync_due(
+        reports = FavoriteCollectionSyncService(LibraryRepository(session), settings).sync_due(
             arguments.user_id, force=arguments.force
         )
         for report in reports:

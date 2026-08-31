@@ -1,49 +1,49 @@
-# VocaDig — Development Plan
+# VocaDig — 开发计划
 
-## Development strategy
+## 开发策略
 
-Build the discovery engine first and the client later.
+先构建发现引擎，后开发客户端。
 
 ```text
-Data
+数据
 →
-Personal Library
+个人曲库
 →
-Baseline Dig
+基础 Dig
 →
-Audio/Text Embeddings
+音频/文本 Embedding
 →
-Configurable Profile
+可配置画像
 →
-Feedback
+反馈
 →
-Exploration + Diversity
+探索 + 多样性
 →
-Daily Dig
+每日 Dig
 →
 API
 →
-Mobile
+移动端
 →
 Learning-to-Rank
 ```
 
-Do not begin with mobile UI or a complex neural recommender.
+不要从移动端 UI 或复杂的神经网络推荐器开始。
 
 ---
 
-## Phase 0 — Project skeleton
+## 阶段 0 — 项目骨架
 
-Set up:
+建立：
 
-- [x] Python environment
-- [x] dependency management
+- [x] Python 环境
+- [x] 依赖管理
 - [x] SQLAlchemy
 - [x] pytest
-- [x] logging
-- [x] configuration
+- [x] 日志
+- [x] 配置
 
-Create:
+创建：
 
 ```text
 [x] backend/
@@ -53,27 +53,27 @@ Create:
 [x] scripts/
 ```
 
-Acceptance:
+验收标准：
 
 ```text
-[x] application starts
-[x] tests execute
+[x] 应用可启动
+[x] 测试可执行
 ```
 
 ---
 
-## Phase 1 — Personal Vocaloid Library
+## 阶段 1 — 个人 Vocaloid 曲库
 
-Implement:
+实现：
 
-- [x] Song model
+- [x] Song 模型
 - [x] UserFavorite
 - [x] UserFeedback
 - [x] UserProfile
-- [x] repository layer
-- [x] CRUD operations
+- [x] 仓储层
+- [x] CRUD 操作
 
-Support:
+支持：
 
 ```text
 [x] add
@@ -83,40 +83,40 @@ Support:
 [x] search
 ```
 
-Acceptance:
+验收标准：
 
-[x] A local database can maintain a substantial personal Vocaloid library.
+[x] 本地数据库能够维护规模可观的个人 Vocaloid 曲库。
 
 ---
 
-## Phase 2 — Niconico Crawler
+## 阶段 2 — Niconico 采集器
 
-Implement:
+实现：
 
 ```text
 [x] crawler/niconico.py
 [x] crawler/parser.py
 ```
 
-Requirements:
+要求：
 
-- [x] incremental crawling
-- [x] duplicate detection
-- [x] retries
-- [x] rate limiting
-- [x] logging
+- [x] 增量采集
+- [x] 重复检测
+- [x] 重试
+- [x] 速率限制
+- [x] 日志
 
-Acceptance:
+验收标准：
 
-[x] New Niconico candidates can be inserted into the local database automatically.
+[x] 可自动将新的 Niconico 候选项写入本地数据库。
 
 ---
 
-## Phase 3 — Baseline Dig Engine
+## 阶段 3 — 基础 Dig 引擎
 
-Before using embeddings, build a simple metadata-based recommender.
+在使用 embedding 前，先构建一个简单的基于元数据的推荐器。
 
-Use:
+使用：
 
 ```text
 tags
@@ -126,7 +126,7 @@ metadata
 novelty
 ```
 
-Implement:
+实现：
 
 ```text
 recommendation/profile.py
@@ -135,42 +135,42 @@ recommendation/scorer.py
 recommendation/ranking.py
 ```
 
-Acceptance:
+验收标准：
 
-Given a personal library and new candidates, VocaDig produces a meaningful ranked list.
+给定个人曲库和新候选项，VocaDig 能生成有意义的排序列表。
 
 ---
 
-## Phase 4 — Audio Embeddings
+## 阶段 4 — 音频 Embedding
 
-Add music-level similarity.
+增加音乐层面的相似度。
 
-Implement:
+实现：
 
 ```text
 features/audio.py
 features/embedding.py
 ```
 
-The encoder interface must remain model-independent.
+编码器接口必须保持独立于具体模型。
 
-Potential first model:
+可选的首个模型：
 
 ```text
 MERT
 ```
 
-Do not allow recommendation code to depend directly on the model implementation.
+不要让推荐代码直接依赖模型实现。
 
-Acceptance:
+验收标准：
 
-New songs can be converted into embeddings and compared with the personal library.
+新歌曲可以转换为 embedding 并与个人曲库进行比较。
 
 ---
 
-## Phase 5 — Text Embeddings
+## 阶段 5 — 文本 Embedding
 
-Add semantic information from:
+增加来自以下内容的语义信息：
 
 ```text
 title
@@ -178,9 +178,9 @@ description
 tags
 ```
 
-Use a Japanese-capable text embedding model.
+使用支持日语的文本 embedding 模型。
 
-Combine:
+组合：
 
 ```text
 audio similarity
@@ -190,57 +190,57 @@ text similarity
 metadata similarity
 ```
 
-with configurable weights.
+并使用可配置的权重。
 
-Acceptance:
+验收标准：
 
-Changing the weights predictably changes the ranking.
+改变权重会以可预测的方式改变排序。
 
 ---
 
-## Phase 6 — Configurable Taste Profile
+## 阶段 6 — 可配置的品味画像
 
-Implement user-controlled parameters:
+实现由用户控制的参数：
 
 ```text
-audio weight
-text weight
-metadata weight
+音频权重
+文本权重
+元数据权重
 
-novelty weight
-popularity weight
-exploration weight
+新颖度权重
+流行度权重
+探索权重
 
-genre preferences
-producer preferences
-vocalist preferences
+流派偏好
+作者偏好
+歌姬偏好
 
-content filters
+内容过滤器
 ```
 
-The scorer must receive the profile as an argument.
+评分器必须将画像作为参数接收。
 
-Bad:
+不推荐：
 
 ```python
 score = 0.6 * audio + 0.3 * text
 ```
 
-Good:
+推荐：
 
 ```python
 score = scorer.score(song, user_profile)
 ```
 
-Acceptance:
+验收标准：
 
-No user-specific recommendation parameter is hard-coded.
+不得硬编码任何用户专属的推荐参数。
 
 ---
 
-## Phase 7 — Exploration and Diversity
+## 阶段 7 — 探索与多样性
 
-Implement:
+实现：
 
 ```text
 novelty
@@ -248,23 +248,23 @@ exploration
 diversity reranking
 ```
 
-The goal is to avoid:
+目标是避免：
 
 ```text
-10 recommendations
+10 条推荐
 →
-10 nearly identical songs
+10 首几乎相同的歌曲
 ```
 
-Acceptance:
+验收标准：
 
-The daily list remains both relevant and diverse.
+每日列表应同时保持相关性和多样性。
 
 ---
 
-## Phase 8 — User Feedback
+## 阶段 8 — 用户反馈
 
-Record:
+记录：
 
 ```text
 play
@@ -274,78 +274,78 @@ dislike
 favorite
 ```
 
-Initial feedback weights can be rule-based.
+初始反馈权重可以基于规则。
 
-Example:
+示例：
 
 ```text
-favorite → strong positive
-like → positive
-play → weak positive
-skip → weak negative
-dislike → strong negative
+favorite → 强正向
+like → 正向
+play → 弱正向
+skip → 弱负向
+dislike → 强负向
 ```
 
-Use these signals to update the personal taste profile.
+使用这些信号更新个人品味画像。
 
-Do not immediately train a neural recommender.
+不要立即训练神经网络推荐器。
 
 ---
 
-## Phase 9 — Daily Dig
+## 阶段 9 — 每日 Dig
 
-Implement:
+实现：
 
 ```python
 generate_daily_recommendations(user_id)
 ```
 
-Pipeline:
+流水线：
 
 ```text
-crawl
+采集
 ↓
-filter
+过滤
 ↓
-extract features
+提取特征
 ↓
-build profile
+构建画像
 ↓
-score
+评分
 ↓
-explore
+探索
 ↓
-rerank
+重排序
 ↓
 Top-K
 ↓
-explain
+解释
 ↓
-save
+保存
 ```
 
-Save:
+保存：
 
 ```text
 date
 rank
 score
-score components
-reason
-algorithm version
+评分组成部分
+原因
+算法版本
 ```
 
-Acceptance:
+验收标准：
 
-VocaDig can automatically generate a reproducible daily recommendation list.
+VocaDig 能自动生成可复现的每日推荐列表。
 
 ---
 
-## Phase 10 — FastAPI
+## 阶段 10 — FastAPI
 
-Expose the discovery engine through REST.
+通过 REST 暴露发现引擎。
 
-Initial endpoints:
+初始端点：
 
 ```text
 GET  /recommendations/today
@@ -361,177 +361,177 @@ GET  /profile
 PUT  /profile
 ```
 
-Acceptance:
+验收标准：
 
-The complete discovery workflow can be accessed without importing backend internals.
+无需导入后端内部模块即可访问完整的发现流程。
 
 ---
 
-## Phase 11 — Minimal Web Client
+## 阶段 11 — 最小化 Web 客户端
 
-Build a functional interface:
+构建可用界面：
 
 ```text
-Today / Daily Dig
-Library
-Song Detail
-Recommendation Settings
-History
+今日 / 每日 Dig
+曲库
+歌曲详情
+推荐设置
+历史记录
 ```
 
-Do not prioritize visual polish.
+不优先追求视觉精致度。
 
-The purpose is to validate recommendation quality.
+目标是验证推荐质量。
 
 ---
 
-## Phase 12 — Mobile Client
+## 阶段 12 — 移动端客户端
 
-Only after the recommendation engine demonstrates useful results.
+仅在推荐引擎已经展现出实用效果后再开始。
 
-Possible technology:
+可选技术：
 
 ```text
 Flutter
 ```
 
-Mobile responsibilities:
+移动端职责：
 
 ```text
-Daily Dig
-song navigation
-library
-feedback
-settings
-notifications
+每日 Dig
+歌曲导航
+曲库
+反馈
+设置
+通知
 ```
 
-Backend remains responsible for:
+后端继续负责：
 
 ```text
-crawling
-feature extraction
-recommendation
-database
-scheduled jobs
+采集
+特征提取
+推荐
+数据库
+定时任务
 ```
 
 ---
 
-## Phase 13 — Learning-to-Rank
+## 阶段 13 — Learning-to-Rank
 
-Only after sufficient interaction data exists.
+仅在积累足够的交互数据后再开始。
 
-Potential models:
+可选模型：
 
 ```text
 LightGBM
 XGBoost
-small neural ranking model
+小型神经网络排序模型
 ```
 
-Training input:
+训练输入：
 
 ```text
-song features
+歌曲特征
 +
-user profile
+用户画像
 +
-recommendation context
+推荐上下文
 ```
 
-Target:
+目标：
 
 ```text
-like probability
-favorite probability
-skip probability
+like 概率
+favorite 概率
+skip 概率
 ```
 
-Initially use learned ranking as a component of the interpretable scoring system rather than replacing it completely.
+初期应将学习排序作为可解释评分系统的一个组成部分，而不是完全替代它。
 
 ---
 
-# Testing
+# 测试
 
-Important tests:
+重要测试：
 
-## Crawler
+## 采集器
 
 ```text
-[x] duplicate posts
-[x] malformed metadata
-- [ ] network failures (retry behavior is implemented, but lacks an automated test)
-- [ ] pagination (offset pagination is implemented, but lacks an automated test)
+[x] 重复投稿
+[x] 畸形元数据
+- [ ] 网络失败（已实现重试行为，但缺少自动化测试）
+- [ ] 分页（已实现偏移量分页，但缺少自动化测试）
 ```
 
-## Database
+## 数据库
 
 ```text
 [x] CRUD
-[x] unique song IDs
-[x] duplicate prevention
+[x] 唯一歌曲 ID
+[x] 重复防止
 ```
 
-## Dig Engine
+## Dig 引擎
 
 ```text
-known favorite → high score
-excluded category → filtered
-novelty weight → predictable effect
-audio weight → predictable effect
+已知收藏 → 高分
+排除的类别 → 被过滤
+新颖度权重 → 可预测的效果
+音频权重 → 可预测的效果
 ```
 
-## Ranking
+## 排序
 
 ```text
-high relevance
+高相关性
 +
-reasonable diversity
+合理的多样性
 ```
 
-## Daily Pipeline
+## 每日流水线
 
 ```text
-same input
+相同输入
 +
-same algorithm version
+相同算法版本
 →
-reproducible result
+可复现结果
 ```
 
-Network-dependent tests should be separated from offline tests.
+依赖网络的测试应与离线测试分离。
 
 ---
 
-# MVP Definition
+# MVP 定义
 
-The MVP is complete when:
+满足以下条件时，MVP 即告完成：
 
 ```text
-User has a personal Vocaloid library
+用户拥有个人 Vocaloid 曲库
             ↓
-VocaDig crawls recent Niconico posts
+VocaDig 采集近期 Niconico 投稿
             ↓
-Candidates are filtered
+候选项被过滤
             ↓
-Features are extracted
+特征被提取
             ↓
-Personal taste is estimated
+个人品味被估计
             ↓
-New songs are scored
+新歌曲被评分
             ↓
-Candidates are diversified
+候选项经过多样化处理
             ↓
-Daily Dig is generated
+每日 Dig 已生成
             ↓
-User provides feedback
+用户提供反馈
             ↓
-Feedback is stored
+反馈被保存
 ```
 
-The mobile application is not required for MVP.
+移动应用不是 MVP 的必要条件。
 
-The primary success criterion is:
+首要成功标准是：
 
-> **Can VocaDig repeatedly dig out previously unknown songs that the user genuinely likes?**
+> **VocaDig 能否持续挖掘出用户此前未知且真正喜欢的歌曲？**
